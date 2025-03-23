@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'package:doctor/patients/PatientsDashboardScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:doctor/dashboard_screen.dart';
-import 'package:doctor/doctor_registration_screen.dart';
-import 'package:doctor/patient_registration_screen.dart';
+import 'package:doctor/doctor/dashboard_screen.dart';
+import 'package:doctor/doctor/doctor_registration_screen.dart';
+import 'package:doctor/patients/patient_registration_screen.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -13,23 +15,24 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  String? username, password;
+  String? username, password, selectedRole;
   bool isLoading = false;
 
   Future<void> login(BuildContext context) async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate() || selectedRole == null) return;
 
     setState(() {
       isLoading = true;
     });
 
-    final url = Uri.parse("http://127.0.0.1:8000/api/login"); // Replace with your API URL
+    final url = Uri.parse("http://127.0.0.1:8000/api/login");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "email": username,
         "password": password,
+        "role": selectedRole!.toLowerCase(), // Send role as 'doctor' or 'patient'
       }),
     );
 
@@ -40,20 +43,36 @@ class _LoginPageState extends State<LoginPage> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       print(data);
+
+      // Save token in SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', data['token']);
+      await prefs.setString('role', selectedRole!);
+      await prefs.setString('docId', data['usedId'].toString());
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login Successful! Welcome, ${data['name']}")),
+        SnackBar(content: Text("${data['message']}")),
       );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => DoctorDashboardScreen()),
-      );
+      // Navigate to the respective dashboard
+      if (selectedRole!.toLowerCase() == "doctor") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => DoctorDashboardScreen()),
+        );
+      } else if (selectedRole!.toLowerCase() == "patient") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => PatientsDashboardScreen()),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Invalid credentials. Please try again.")),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
                       color: Colors.teal.shade900,
                     ),
                   ),
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
                   Center(
                     child: Card(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -88,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                       color: Colors.white.withOpacity(0.85),
                       child: Container(
                         width: 450,
-                        padding: EdgeInsets.all(15),
+                        padding: const EdgeInsets.all(15),
                         child: Form(
                           key: _formKey,
                           child: Column(
@@ -96,34 +115,35 @@ class _LoginPageState extends State<LoginPage> {
                             children: [
                               _buildTextField("Email", Icons.email, (val) => username = val),
                               _buildTextField("Password", Icons.lock, (val) => password = val, isPassword: true),
-                              SizedBox(height: 10),
+                              _buildRoleDropdown(),
+                              const SizedBox(height: 10),
                               SizedBox(
                                 width: 250,
                                 child: ElevatedButton(
                                   onPressed: () => login(context),
                                   child: isLoading
-                                      ? CircularProgressIndicator(color: Colors.white)
-                                      : Text("Login", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                                      ? const CircularProgressIndicator(color: Colors.white)
+                                      : const Text("Login", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                                   style: ElevatedButton.styleFrom(
-                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                                    backgroundColor: Color(0xFF0080A2),
+                                    backgroundColor: const Color(0xFF0080A2),
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 8),
-                              Text("Don't have an account?", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
+                              const Text("Don't have an account?", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                              const SizedBox(height: 8),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  _buildRegisterButton("Patient", Color(0xFFFC455D), Icons.local_hospital, () {
+                                  _buildRegisterButton("Patient", const Color(0xFFFC455D), Icons.local_hospital, () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(builder: (context) => PatientRegistrationScreen()),
                                     );
                                   }),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   _buildRegisterButton("Doctor", Colors.blue.shade600, Icons.medical_services, () {
                                     Navigator.push(
                                       context,
@@ -149,7 +169,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildTextField(String label, IconData icon, Function(String) onChanged, {bool isPassword = false}) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.only(bottom: 15),
       child: TextFormField(
         obscureText: isPassword,
         decoration: InputDecoration(
@@ -172,15 +192,47 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget _buildRoleDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: DropdownButtonFormField<String>(
+        value: selectedRole,
+        decoration: InputDecoration(
+          labelText: "Select Role",
+          labelStyle: TextStyle(color: Colors.teal.shade900),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
+          ),
+          prefixIcon: Icon(Icons.person, color: Colors.teal.shade700),
+        ),
+        items: ["Doctor", "Patient"].map((role) {
+          return DropdownMenuItem(
+            value: role,
+            child: Text(role),
+          );
+        }).toList(),
+        onChanged: (val) {
+          setState(() {
+            selectedRole = val!;
+          });
+        },
+        validator: (val) => val == null ? "Role is required" : null,
+      ),
+    );
+  }
+
   Widget _buildRegisterButton(String text, Color color, IconData icon, VoidCallback onPressed) {
     return Container(
       width: 200,
       child: ElevatedButton.icon(
         onPressed: onPressed,
         icon: Icon(icon, color: Colors.white),
-        label: Text(text, style: TextStyle(fontSize: 14)),
+        label: Text(text, style: const TextStyle(fontSize: 14)),
         style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
           backgroundColor: color,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),

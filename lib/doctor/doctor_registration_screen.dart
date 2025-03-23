@@ -16,7 +16,6 @@ class _DoctorRegistrationScreenState extends State<DoctorRegistrationScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       final url = Uri.parse("http://127.0.0.1:8000/api/addDoctor");
-
       try {
         final response = await http.post(
           url,
@@ -27,13 +26,12 @@ class _DoctorRegistrationScreenState extends State<DoctorRegistrationScreen> {
             "password": password,
             "phone_number": contact,
             "address": address,
-            "doctor_specialist": specialization,
-            "doctor_experience": experience,
+            "specialist": specialization,
+            "experience": experience,
           }),
         );
-
         final responseData = jsonDecode(response.body);
-
+        print(responseData);
         if (response.statusCode == 200 || response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(responseData["message"] ?? "Doctor added successfully!")),
@@ -52,6 +50,7 @@ class _DoctorRegistrationScreenState extends State<DoctorRegistrationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e")),
         );
+        print(e);
       }
     }
   }

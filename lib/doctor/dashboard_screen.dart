@@ -1,12 +1,13 @@
-import 'package:doctor/appointment_list_screen.dart';
 import 'package:doctor/login_screen.dart';
-import 'package:doctor/pending_appointments_screen.dart';
+import 'package:doctor/doctor/pending_appointments_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'appointment_list_screen.dart';
 
 class DoctorDashboardScreen extends StatefulWidget {
   @override
@@ -24,32 +25,48 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     fetchData();
   }
 
-    Future<void> fetchData() async {
-      try {
-        final patientResponse = await http.get(Uri.parse("http://127.0.0.1:8000/api/totalPatient"));
-        final appointmentResponse = await http.get(Uri.parse("http://127.0.0.1:8000/api/totalAppointment"));
+  Future<void> fetchData() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token'); // Retrieve token
 
-        if (patientResponse.statusCode == 200 && appointmentResponse.statusCode == 200) {
-          final patientData = jsonDecode(patientResponse.body);
-          final appointmentData = jsonDecode(appointmentResponse.body);
-          setState(() {
-            totalPatients = patientData["total_patients"];
-            totalAppointments = appointmentData["total_appointment"];
-          });
-        }
-      } catch (e) {
-        print("Error fetching data: $e");
+      if (token == null) {
+        print("Token not found. User not authenticated.");
+        return;
       }
-    }
-  void _logout() async {
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // await prefs.clear(); // Clears all stored session data
 
-    Navigator.pushReplacement(
+      final response = await http.get(
+        Uri.parse("http://127.0.0.1:8000/api/totalPatient"),
+        headers: {
+          'Authorization': 'Bearer $token', // Include Bearer Token
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          totalPatients = data["total_patients"];
+        });
+      } else {
+        print("Error: ${response.body}");
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
+  Future<void> logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Remove token and role
+
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()), // Redirect to Login
+      MaterialPageRoute(builder: (context) => LoginPage()),
+          (route) => false, // Remove all previous routes
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +79,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.logout, color: Colors.red),
-            onPressed: _logout,
+            onPressed: () => logout(context),
           ),
         ],
       ),

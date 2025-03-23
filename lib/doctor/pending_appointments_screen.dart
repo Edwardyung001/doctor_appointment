@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PendingAppointmentsScreen extends StatefulWidget {
   @override
-  _PendingAppointmentsScreenState createState() =>
-      _PendingAppointmentsScreenState();
+  _PendingAppointmentsScreenState createState() => _PendingAppointmentsScreenState();
 }
 
 class _PendingAppointmentsScreenState extends State<PendingAppointmentsScreen> {
@@ -19,26 +19,38 @@ class _PendingAppointmentsScreenState extends State<PendingAppointmentsScreen> {
   }
 
   Future<void> fetchPendingAppointments() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? docId = prefs.getString('docId');
+    String? token = prefs.getString('token');
+
+    if (docId == null) {
+      showSnackBar("Doctor ID not found!");
+      return;
+    }
+
     try {
-      final response = await http.get(
-          Uri.parse("http://127.0.0.1:8000/api/newAppointmentList"));
+      final response = await http.post(
+        Uri.parse("http://127.0.0.1:8000/api/newAppointmentList"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token"
+        },
+        body: jsonEncode({"docId": docId}),
+      );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
+        print("API Response: ${response.body}");
         setState(() {
-          pendingAppointments = data["appointments"];
+          pendingAppointments = data["appointments"] ?? [];
           isLoading = false;
         });
       } else {
-        setState(() {
-          isLoading = false;
-        });
+        setState(() => isLoading = false);
         showSnackBar("Failed to fetch appointments.");
       }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
       showSnackBar("Error: $e");
     }
   }
@@ -52,64 +64,52 @@ class _PendingAppointmentsScreenState extends State<PendingAppointmentsScreen> {
     );
   }
 
-  Future<void> approveAppointment(int patientId) async {
-    DateTime? selectedDateTime = await _selectDateTime();
-    if (selectedDateTime == null) return;
+  Future<void> approveAppointment(int appointmentId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    print(token);
+    print(appointmentId);
 
-    String formattedDateTime =
-    selectedDateTime.toString().substring(0, 19); // YYYY-MM-DD HH:MM:SS
+    if (token == null) {
+      showSnackBar("Authentication token not found. Please login again.");
+      return;
+    }
 
     try {
       final response = await http.post(
         Uri.parse("http://127.0.0.1:8000/api/approvalAppointment"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "patientId": patientId,
-          "datetime": formattedDateTime,
-        }),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"appointmentId": appointmentId}),
       );
 
       final responseData = jsonDecode(response.body);
-      showSnackBar(responseData["message"]);
+      print("API Response: ${response.body}"); // Debugging response
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        fetchPendingAppointments();
+      if (response.statusCode == 200) {
+        showSnackBar(responseData["message"]);
+        fetchPendingAppointments(); // Refresh the list after approval
+      } else if (response.statusCode == 401) {
+        showSnackBar("Authentication error: ${responseData["message"]}");
+      } else {
+        showSnackBar("Error: ${responseData["message"]}");
       }
     } catch (e) {
-      showSnackBar("Error: $e");
+      showSnackBar("Network error: $e");
+      print(e);
     }
   }
 
-  Future<DateTime?> _selectDateTime() async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
 
-    if (pickedDate == null) return null;
-
-    TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-
-    if (pickedTime == null) return null;
-
-    return DateTime(pickedDate.year, pickedDate.month, pickedDate.day,
-        pickedTime.hour, pickedTime.minute);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.blueGrey[50],
       appBar: AppBar(
-        title: Text(
-          "Pending Appointments",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text("Pending Appointments", style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.blueAccent,
         elevation: 5,
@@ -117,16 +117,13 @@ class _PendingAppointmentsScreenState extends State<PendingAppointmentsScreen> {
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : pendingAppointments.isEmpty
-          ? Center(
-          child: Text(
-            "No pending appointments",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-          ))
+          ? Center(child: Text("No pending appointments", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)))
           : ListView.builder(
         padding: EdgeInsets.all(16),
         itemCount: pendingAppointments.length,
         itemBuilder: (context, index) {
           final appointment = pendingAppointments[index];
+
           return Container(
             margin: EdgeInsets.only(bottom: 16),
             padding: EdgeInsets.all(16),
@@ -153,36 +150,31 @@ class _PendingAppointmentsScreenState extends State<PendingAppointmentsScreen> {
                     ),
                     SizedBox(width: 12),
                     Text(
-                      appointment["name"],
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      appointment["name"] ?? "Unknown",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
                 Divider(height: 20, color: Colors.grey[300]),
-                infoRow("Email", appointment["email"]),
-                infoRow("Phone", appointment["phone_number"]),
-                infoRow("Problem", appointment["problem"]),
-                infoRow("Gender", appointment["gender"]),
-                infoRow("Age", appointment["age"].toString()),
-                infoRow("Address", appointment["address"]),
+                infoRow("Email", appointment["email"] ?? "N/A"),
+                infoRow("Phone", appointment["phone"] ?? "N/A"),
+                infoRow("Problem", appointment["problem"] ?? "N/A"),
+                infoRow("Gender", appointment["gender"] ?? "N/A"),
+                infoRow("Age", appointment["age"]?.toString() ?? "N/A"),
+                infoRow("Address", appointment["address"] ?? "N/A"),
+                infoRow("Date", appointment["appoint_date"] ?? "N/A"),
+                infoRow("Time", appointment["appoint_date"] ?? "N/A"),
                 SizedBox(height: 10),
                 Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(
-                    onPressed: () =>
-                        approveAppointment(appointment["id"]),
+                    onPressed: () => approveAppointment(appointment["id"]),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15)),
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                     ),
-                    child: Text(
-                      "Approve",
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    child: Text("Approve", style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],

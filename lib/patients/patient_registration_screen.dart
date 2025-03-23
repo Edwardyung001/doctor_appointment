@@ -11,8 +11,7 @@ class PatientRegistrationScreen extends StatefulWidget {
 
 class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
-  String? name, email, password, age, gender, contact, address, problem;
-  bool appointmentRequired = false;
+  String? name, email, password, age, gender, contact, address;
 
   @override
   Widget build(BuildContext context) {
@@ -64,8 +63,6 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
                               _buildTextField("Gender", (val) => gender = val),
                               _buildTextField("Contact", (val) => contact = val, keyboardType: TextInputType.phone),
                               _buildTextField("Address", (val) => address = val),
-                              _buildRadioButtons(),
-                              _buildTextField("Problem Description", (val) => problem = val, maxLines: 3),
                               SizedBox(height: 20),
                               ElevatedButton(
                                 onPressed: _submitForm,
@@ -121,38 +118,7 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
     );
   }
 
-  Widget _buildRadioButtons() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Appointment Required?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        Row(
-          children: [
-            Expanded(
-              child: ListTile(
-                title: Text("Yes"),
-                leading: Radio<bool>(
-                  value: true,
-                  groupValue: appointmentRequired,
-                  onChanged: (value) => setState(() => appointmentRequired = value!),
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListTile(
-                title: Text("No"),
-                leading: Radio<bool>(
-                  value: false,
-                  groupValue: appointmentRequired,
-                  onChanged: (value) => setState(() => appointmentRequired = value!),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
@@ -167,8 +133,6 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
           "address": address ?? "",
           "gender": gender ?? "",
           "age": age ?? "",
-          "appointment_status": appointmentRequired ? "Yes" : "No",
-          "problem": problem ?? "",
         }),
       );
 print(response.body);
