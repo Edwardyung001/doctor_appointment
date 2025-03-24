@@ -168,7 +168,7 @@ class _PendingAppointmentsScreenState extends State<PendingAppointmentsScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(
-                    onPressed: () => approveAppointment(appointment["id"]),
+                    onPressed: () => approveAppointment(appointment["appoint_id"]),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),

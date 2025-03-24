@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:doctor/patients/PatientsDashboardScreen.dart';
+import 'package:doctor/student/student_dashboard_screen.dart';
+import 'package:doctor/student/student_signup.dart';
+import 'package:doctor/student/student_update_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,6 +67,12 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => PatientsDashboardScreen()),
+        );
+      }
+      else if (selectedRole!.toLowerCase() == "student") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => StudentDashboard()),
         );
       }
     } else {
@@ -150,8 +159,23 @@ class _LoginPageState extends State<LoginPage> {
                                       MaterialPageRoute(builder: (context) => DoctorRegistrationScreen()),
                                     );
                                   }),
+
                                 ],
                               ),
+                              const SizedBox(height: 20,),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+
+                                  _buildRegisterButton("Student", Colors.green.shade600, Icons.account_circle, () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => StudentSignupScreen()),
+                                    );
+                                  }),
+                                ],
+                              )
+
                             ],
                           ),
                         ),
@@ -208,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
           prefixIcon: Icon(Icons.person, color: Colors.teal.shade700),
         ),
-        items: ["Doctor", "Patient"].map((role) {
+        items: ["Doctor", "Patient","Student"].map((role) {
           return DropdownMenuItem(
             value: role,
             child: Text(role),
