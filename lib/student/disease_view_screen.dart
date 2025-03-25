@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'edit_disease.dart';
+
 class DiseaseTableScreen extends StatefulWidget {
   @override
   _DiseaseTableScreenState createState() => _DiseaseTableScreenState();
@@ -66,9 +68,16 @@ class _DiseaseTableScreenState extends State<DiseaseTableScreen> {
     }
   }
 
-  void _editDisease(int index) {
-    print("Edit clicked for ${diseaseList[index]['name']}");
+  void _editDisease(int index) async {
+   Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditDiseaseScreen(diseaseId:index),
+      ),
+    );
+
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +115,7 @@ class _DiseaseTableScreenState extends State<DiseaseTableScreen> {
                 DataCell(
                   IconButton(
                     icon: Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () => _editDisease(index),
+                    onPressed: () => _editDisease(data['id']),
                   ),
                 ),
               ]);

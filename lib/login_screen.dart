@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:doctor/password_textfiled_widget.dart';
 import 'package:doctor/patients/PatientsDashboardScreen.dart';
 import 'package:doctor/student/student_dashboard_screen.dart';
 import 'package:doctor/student/student_signup.dart';
@@ -51,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', data['token']);
       await prefs.setString('role', selectedRole!);
-      await prefs.setString('docId', data['usedId'].toString());
+      await prefs.setString('docId', data['userId'].toString());
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("${data['message']}")),
@@ -123,7 +124,13 @@ class _LoginPageState extends State<LoginPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               _buildTextField("Email", Icons.email, (val) => username = val),
-                              _buildTextField("Password", Icons.lock, (val) => password = val, isPassword: true),
+                              PasswordTextField(
+                                label: "Password",
+                                icon: Icons.lock,
+                                onChanged: (value) {
+                                      (val) => password = val;
+                                },
+                              ),
                               _buildRoleDropdown(),
                               const SizedBox(height: 10),
                               SizedBox(

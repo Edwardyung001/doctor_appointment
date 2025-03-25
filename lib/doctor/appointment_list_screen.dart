@@ -1,3 +1,4 @@
+import 'package:doctor/doctor/patient_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -149,18 +150,39 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
                         Text("Time: ${appointment["appoint_time"]}"),
                       ],
                     ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.receipt_long, color: Colors.blue), // Prescription Icon
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PrescriptionDetailsScreen(
-                              appointmentId: appointment["appoint_id"].toString(),
-                            ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.receipt_long, color: Colors.blue), // Prescription Icon
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PrescriptionDetailsScreen(
+                                  appointmentId: appointment["appoint_id"].toString(),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PatientDetailsScreen(
+                                  appointmentId: appointment["appoint_id"].toString(),
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
                           ),
-                        );
-                      },
+                          child: Text("Diagnose"),
+                        ),
+                      ],
                     ),
                   ),
                 );
