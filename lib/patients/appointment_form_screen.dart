@@ -50,7 +50,6 @@ class _AppointmentFormScreenState extends State<AppointmentFormScreen> {
     String? patientId = prefs.getString('docId');
 
     if (selectedDoctorId == null ||
-        fullNameController.text.isEmpty ||
         phoneController.text.isEmpty ||
         dateController.text.isEmpty ||
         timeController.text.isEmpty ||
@@ -106,11 +105,11 @@ print(data);
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            TextField(
-              controller: fullNameController,
-              decoration: InputDecoration(labelText: "Full Name", border: OutlineInputBorder()),
-            ),
-            SizedBox(height: 15),
+            // TextField(
+            //   controller: fullNameController,
+            //   decoration: InputDecoration(labelText: "Full Name", border: OutlineInputBorder()),
+            // ),
+            // SizedBox(height: 15),
             TextField(
               controller: phoneController,
               decoration: InputDecoration(labelText: "Phone Number", border: OutlineInputBorder()),

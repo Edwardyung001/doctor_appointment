@@ -30,6 +30,11 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     final url = Uri.parse("http://127.0.0.1:8000/api/login");
+
+    final input={   "email": username,
+    "password": password,
+    "role": selectedRole!.toLowerCase(),};
+    print(input);
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -44,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
       isLoading = false;
     });
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200||response.statusCode == 201) {
       final data = jsonDecode(response.body);
       print(data);
 
@@ -123,13 +128,16 @@ class _LoginPageState extends State<LoginPage> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _buildTextField("Email", Icons.email, (val) => username = val),
-                              PasswordTextField(
+                              CustomTextField(
+                                label: "Email",
+                                icon: Icons.email,
+                                onChanged: (val) => username = val,
+                              ),
+                              CustomTextField(
                                 label: "Password",
                                 icon: Icons.lock,
-                                onChanged: (value) {
-                                      (val) => password = val;
-                                },
+                                onChanged: (val) => password = val,
+                                isPassword: true, // Enable password visibility toggle
                               ),
                               _buildRoleDropdown(),
                               const SizedBox(height: 10),
@@ -194,31 +202,6 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, IconData icon, Function(String) onChanged, {bool isPassword = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: TextFormField(
-        obscureText: isPassword,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.teal.shade900),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
-          ),
-          prefixIcon: Icon(icon, color: Colors.teal.shade700),
-        ),
-        validator: (val) {
-          if (val == null || val.isEmpty) return "$label is required";
-          return null;
-        },
-        onChanged: onChanged,
       ),
     );
   }
