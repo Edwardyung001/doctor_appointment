@@ -1,4 +1,5 @@
 import 'package:doctor/doctor/patient_details_screen.dart';
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -27,49 +28,38 @@ class _AppointmentListScreenState extends State<AppointmentListScreen> {
   Future<void> fetchAppointments() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
       String? docId = prefs.getString('docId');
 
-      if (token == null || docId == null) {
-        print("Token or docId is missing.");
-        if (mounted) {
-          setState(() => isLoading = false);
-        }
+      if (docId == null) {
+        print("Error: docId is missing.");
+        _setLoading(false);
         return;
       }
 
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/approvalAppointmentList"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({"docId": docId}),
-      );
+      final response = await ApiService.post("approvalAppointmentList", {"docId": docId});
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print(data);
+      if (response != null) {
+        print(response);
         if (mounted) {
           setState(() {
-            appointments = data["appointments"];
+            appointments = response["appointments"] ?? [];
             filteredAppointments = List.from(appointments);
-            isLoading = false;
           });
         }
       } else {
-        print("Failed to load appointments: ${response.body}");
-        if (mounted) {
-          setState(() => isLoading = false);
-        }
+        print("Failed to fetch appointments.");
       }
     } catch (e) {
       print("Error fetching appointments: $e");
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+    } finally {
+      _setLoading(false);
     }
   }
+
+  void _setLoading(bool value) {
+    if (mounted) setState(() => isLoading = value);
+  }
+
 
   void filterAppointments() {
     String query = searchController.text.toLowerCase();
