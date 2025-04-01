@@ -143,16 +143,16 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               );
             },
           ),
-          ListTile(
-            leading: Icon(Icons.medical_services, color: Colors.deepPurple),
-            title: Text("Diagnosis", style: TextStyle(color: Colors.deepPurple)),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => EditProfileScreen()),
-              );
-            },
-          ),
+          // ListTile(
+          //   leading: Icon(Icons.medical_services, color: Colors.deepPurple),
+          //   title: Text("Diagnosis", style: TextStyle(color: Colors.deepPurple)),
+          //   onTap: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(builder: (context) => EditProfileScreen()),
+          //     );
+          //   },
+          // ),
           ListTile(
             leading: Icon(Icons.history, color: Colors.deepPurple),
             title: Text("Appointment List", style: TextStyle(color: Colors.deepPurple)),

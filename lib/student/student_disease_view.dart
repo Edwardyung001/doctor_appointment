@@ -1,15 +1,13 @@
 import 'package:doctor/network/api_serivce.dart';
-import 'package:doctor/doctor/disease_enter_screen.dart';
 import 'package:flutter/material.dart';
 
-import 'edit_disease.dart';
 
-class DiseaseTableScreen extends StatefulWidget {
+class StudentDiseaseScreen extends StatefulWidget {
   @override
-  _DiseaseTableScreenState createState() => _DiseaseTableScreenState();
+  _StudentDiseaseScreenState createState() => _StudentDiseaseScreenState();
 }
 
-class _DiseaseTableScreenState extends State<DiseaseTableScreen> {
+class _StudentDiseaseScreenState extends State<StudentDiseaseScreen> {
   List<Map<String, dynamic>> diseaseList = [];
   List<Map<String, dynamic>> _filteredDiseaseList = [];
   bool _isLoading = true;
@@ -57,19 +55,6 @@ class _DiseaseTableScreenState extends State<DiseaseTableScreen> {
     });
   }
 
-  void _editDisease(int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditDiseaseScreen(diseaseId: index),
-      ),
-    );
-  }
-
-  void _addDisease() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => DiseaseManagementPage()));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,12 +71,6 @@ class _DiseaseTableScreenState extends State<DiseaseTableScreen> {
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
-            ),
-            SizedBox(height: 10),
-
-            ElevatedButton(
-              onPressed: _addDisease,
-              child: Text("Add Disease"),
             ),
             SizedBox(height: 10),
             Expanded(
@@ -111,7 +90,7 @@ class _DiseaseTableScreenState extends State<DiseaseTableScreen> {
                       DataColumn(label: Text("Treatment", style: TextStyle(fontWeight: FontWeight.bold))),
                       DataColumn(label: Text("Cases", style: TextStyle(fontWeight: FontWeight.bold))),
                       DataColumn(label: Text("Notes", style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text("Actions", style: TextStyle(fontWeight: FontWeight.bold))),
+
                     ],
                     rows: _filteredDiseaseList.asMap().entries.map((entry) {
                       int index = entry.key;
@@ -124,12 +103,6 @@ class _DiseaseTableScreenState extends State<DiseaseTableScreen> {
                         DataCell(Text(data["treatment"] ?? "N/A")),
                         DataCell(Text("${data["causes"] ?? "N/A"}")),
                         DataCell(Text(data["overview"] ?? "N/A")),
-                        DataCell(
-                          IconButton(
-                            icon: Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () => _editDisease(data['id']),
-                          ),
-                        ),
                       ]);
                     }).toList(),
                   ),
