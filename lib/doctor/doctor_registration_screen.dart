@@ -1,7 +1,6 @@
 import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+
 
 class DoctorRegistrationScreen extends StatefulWidget {
   @override

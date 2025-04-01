@@ -3,7 +3,6 @@ import 'package:doctor/patients/patient_approved_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'appointment_form_screen.dart';
-import 'prescription_details_screen.dart';
 
 class PatientsDashboardScreen extends StatelessWidget {
 

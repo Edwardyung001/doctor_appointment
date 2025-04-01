@@ -1,8 +1,8 @@
-import 'dart:convert';
+
 import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+
 
 class EditProfileScreen extends StatefulWidget {
   @override
@@ -33,38 +33,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> fetchDoctorDetails() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
       String? docId = prefs.getString('docId');
 
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/getDoctorDetails"),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({"doctor_id": docId}),
-      );
+      if (docId == null) {
+        print("Error: docId is missing.");
+        _setLoading(false);
+        return;
+      }
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          doctorDetails = data["doctor"];
-          initializeControllers();
-          isLoading = false;
-        });
+      final response = await ApiService.post("getDoctorDetails", {"doctor_id": docId});
+
+      if (response != null) {
+        print(response);
+        if (mounted) {
+          setState(() {
+            doctorDetails = response["doctor"];
+            initializeControllers();
+          });
+        }
       } else {
-        print("Error: ${response.body}");
-        setState(() {
-          isLoading = false;
-        });
+        print("Failed to fetch doctor details.");
       }
     } catch (e) {
       print("Error fetching doctor details: $e");
-      setState(() {
-        isLoading = false;
-      });
+    } finally {
+      _setLoading(false);
     }
   }
+
+  void _setLoading(bool value) {
+    if (mounted) setState(() => isLoading = value);
+  }
+
 
   void initializeControllers() {
     nameController = TextEditingController(text: doctorDetails?['name'] ?? '');

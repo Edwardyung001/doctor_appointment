@@ -1,9 +1,6 @@
 import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
 import 'prescription_details_screen.dart'; // Import the new screen
 
 class PatientApprovedScreen extends StatefulWidget {

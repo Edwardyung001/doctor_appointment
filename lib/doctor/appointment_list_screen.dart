@@ -1,10 +1,7 @@
 import 'package:doctor/doctor/patient_details_screen.dart';
 import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../patients/prescription_details_screen.dart';
 
 class AppointmentListScreen extends StatefulWidget {

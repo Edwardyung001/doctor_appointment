@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StudentProfileUpdatePage extends StatefulWidget {
@@ -20,9 +18,7 @@ class _StudentProfileUpdatePageState extends State<StudentProfileUpdatePage> {
   TextEditingController mobileController = TextEditingController();
   TextEditingController ageController = TextEditingController();
   TextEditingController addressController = TextEditingController();
-
   String? gender;
-  String apiUrl = "http://127.0.0.1:8000/api/getProfile";
 
   @override
   void initState() {

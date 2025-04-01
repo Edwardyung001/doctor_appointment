@@ -1,8 +1,6 @@
 import 'package:doctor/network/api_serivce.dart';
 import 'package:doctor/patients/PatientsDashboardScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppointmentFormScreen extends StatefulWidget {
