@@ -1,3 +1,4 @@
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -21,37 +22,24 @@ class _PendingAppointmentsScreenState extends State<PendingAppointmentsScreen> {
   Future<void> fetchPendingAppointments() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? docId = prefs.getString('docId');
-    String? token = prefs.getString('token');
 
     if (docId == null) {
       showSnackBar("Doctor ID not found!");
       return;
     }
 
-    try {
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/newAppointmentList"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token"
-        },
-        body: jsonEncode({"docId": docId}),
-      );
+    setState(() => isLoading = true);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        print("API Response: ${response.body}");
-        setState(() {
-          pendingAppointments = data["appointments"] ?? [];
-          isLoading = false;
-        });
-      } else {
-        setState(() => isLoading = false);
-        showSnackBar("Failed to fetch appointments.");
-      }
-    } catch (e) {
+    final response = await ApiService.post("newAppointmentList", {"docId": docId});
+
+    if (response != null && response.containsKey("appointments")) {
+      setState(() {
+        pendingAppointments = response["appointments"];
+        isLoading = false;
+      });
+    } else {
       setState(() => isLoading = false);
-      showSnackBar("Error: $e");
+      showSnackBar("Failed to fetch appointments.");
     }
   }
 
@@ -65,44 +53,15 @@ class _PendingAppointmentsScreenState extends State<PendingAppointmentsScreen> {
   }
 
   Future<void> approveAppointment(int appointmentId) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-    print(token);
-    print(appointmentId);
+    final response = await ApiService.post("approvalAppointment", {"appointmentId": appointmentId});
 
-    if (token == null) {
-      showSnackBar("Authentication token not found. Please login again.");
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/approvalAppointment"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({"appointmentId": appointmentId}),
-      );
-
-      final responseData = jsonDecode(response.body);
-      print("API Response: ${response.body}"); // Debugging response
-
-      if (response.statusCode == 200) {
-        showSnackBar(responseData["message"]);
-        fetchPendingAppointments(); // Refresh the list after approval
-      } else if (response.statusCode == 401) {
-        showSnackBar("Authentication error: ${responseData["message"]}");
-      } else {
-        showSnackBar("Error: ${responseData["message"]}");
-      }
-    } catch (e) {
-      showSnackBar("Network error: $e");
-      print(e);
+    if (response != null && response.containsKey("message")) {
+      showSnackBar(response["message"]);
+      fetchPendingAppointments(); // Refresh list
+    } else {
+      showSnackBar("Approval failed. Please try again.");
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {

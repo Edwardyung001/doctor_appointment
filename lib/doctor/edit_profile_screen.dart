@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -98,16 +99,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
       String? docId = prefs.getString('docId');
 
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/updateDoctor"),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
+      final response = await ApiService.post(
+        "updateDoctor",
+        {
           "doctor_id": docId,
           "name": nameController.text,
           "email": emailController.text,
@@ -116,23 +112,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           "address": addressController.text,
           "specialist": specialistController.text,
           "experience": experienceController.text,
-        }),
+        },
       );
 
-      final responseData = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        _showMessage(responseData["message"], true);
+      if (response != null) {
+        _showMessage(response["message"], true);
       } else {
-        _showMessage(responseData["message"], false);
+        _showMessage("Failed to update profile. Please try again.", false);
       }
     } catch (e) {
       _showMessage("Something went wrong. Please try again.", false);
+      print("Exception: $e");
     } finally {
       setState(() {
         isSaving = false;
       });
     }
   }
+
 
   void _showMessage(String message, bool isSuccess) {
     ScaffoldMessenger.of(context).showSnackBar(

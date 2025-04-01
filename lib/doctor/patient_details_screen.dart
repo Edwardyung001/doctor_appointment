@@ -1,3 +1,4 @@
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -27,44 +28,19 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
   Future<void> fetchPrescriptionDetails() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
-
-      if (token == null) {
-        setState(() {
-          errorMessage = "Authentication token is missing";
-          isLoading = false;
-        });
-        return;
-      }
-
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/getPatientDeatils"),
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json"
-        },
-        body: jsonEncode({"appointmentId": widget.appointmentId}),
+      final response = await ApiService.post(
+        "getPatientDeatils",
+        {"appointmentId": widget.appointmentId},
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-
-        if (data == null || !data.containsKey('appointment')) {
-          setState(() {
-            errorMessage = "No appointment details found";
-            isLoading = false;
-          });
-          return;
-        }
-
+      if (response != null && response.containsKey('appointment')) {
         setState(() {
-          appointment = data['appointment'] ?? {};
+          appointment = response['appointment'] ?? {};
           isLoading = false;
         });
       } else {
         setState(() {
-          errorMessage = "Failed to fetch patient details: ${response.body}";
+          errorMessage = response?["message"] ?? "No appointment details found";
           isLoading = false;
         });
       }
@@ -78,43 +54,19 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
   Future<void> submitNotes() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
-
-      if (token == null) {
-        setState(() {
-          errorMessage = "Authentication token is missing";
-        });
-        return;
-      }
-
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/diseases/search"),
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json"
-        },
-        body: jsonEncode({
-          "symptoms": notesController.text
-        }),
+      final response = await ApiService.post(
+        "diseases/search",
+        {"symptoms": notesController.text},
       );
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        print(data);
 
-        if (data.containsKey("diseases")) {
-          setState(() {
-            diseases = data["diseases"];
-          });
-        } else {
-          setState(() {
-            diseases = [];
-            errorMessage = data["message"] ?? "No diseases found.";
-          });
-        }
+      if (response != null && response.containsKey("diseases")) {
+        setState(() {
+          diseases = response["diseases"];
+        });
       } else {
         setState(() {
-          errorMessage = "Failed to fetch diseases: ${response.body}";
+          diseases = [];
+          errorMessage = response?["message"] ?? "No diseases found.";
         });
       }
     } catch (e) {
@@ -123,6 +75,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       });
     }
   }
+
 
   Widget buildInfoCard(IconData icon, String label, String? value) {
     return Card(

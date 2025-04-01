@@ -1,3 +1,4 @@
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -28,33 +29,23 @@ class _PatientApprovedScreenState extends State<PatientApprovedScreen> {
     });
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
     String? patientId = prefs.getString('docId');
 
-    final response = await http.post(
-      Uri.parse("http://127.0.0.1:8000/api/patientApproved"),
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json"
-      },
-      body: jsonEncode({"patientId": patientId}),
-    );
+    final response = await ApiService.post("patientApproved", {"patientId": patientId});
 
-    final data = jsonDecode(response.body);
-    print(data);
-
-    if (response.statusCode == 200) {
+    if (response != null && response.containsKey('appointments')) {
       setState(() {
-        appointments = List<Map<String, dynamic>>.from(data['appointments']);
+        appointments = List<Map<String, dynamic>>.from(response['appointments']);
         isLoading = false;
       });
     } else {
       setState(() {
-        errorMessage = data['message'] ?? "Failed to load data";
+        errorMessage = response?['message'] ?? "Failed to load data";
         isLoading = false;
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

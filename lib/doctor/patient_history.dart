@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -22,36 +23,26 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   Future<void> fetchPatientHistory() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
       String? docId = prefs.getString('docId');
 
-      if (token == null || docId == null) {
+      if (docId == null) {
         setState(() {
-          errorMessage = "Authentication details missing.";
+          errorMessage = "Doctor ID is missing.";
           isLoading = false;
         });
         return;
       }
 
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/patientHistory"),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({"docId": docId}),
-      );
+      final response = await ApiService.post("patientHistory", {"docId": docId});
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      if (response != null && response.containsKey("appointments")) {
         setState(() {
-          appointments = data["appointments"];
+          appointments = response["appointments"];
           isLoading = false;
         });
       } else {
-        final data = jsonDecode(response.body);
         setState(() {
-          errorMessage = data["message"] ?? "Failed to load data.";
+          errorMessage = response?["message"] ?? "Failed to load data.";
           isLoading = false;
         });
       }
@@ -62,6 +53,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -48,20 +49,13 @@ class _StudentProfileUpdatePageState extends State<StudentProfileUpdatePage> {
 
   Future<void> _fetchProfileData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
     String? studentId = prefs.getString('docId');
-    print(studentId);
-    try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {"Authorization": "Bearer $token"},
-        body: {"student_id": studentId}, // Replace with actual student ID
-      );
 
-      final data = json.decode(response.body);
-print(data);
-      if (response.statusCode == 200 && data['status'] == true) {
-        final student = data['student'];
+    try {
+      final response = await ApiService.post("getProfile", {"student_id": studentId});
+
+      if (response != null && response['status'] == true) {
+        final student = response['student'];
         setState(() {
           nameController.text = student['name'];
           emailController.text = student['email'];
@@ -72,7 +66,7 @@ print(data);
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? "Failed to fetch profile")),
+          SnackBar(content: Text(response?['message'] ?? "Failed to fetch profile")),
         );
       }
     } catch (e) {
@@ -88,50 +82,39 @@ print(data);
     setState(() {
       _isSaving = true;
     });
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     String? studentId = prefs.getString('docId');
 
-    final url = "http://127.0.0.1:8000/api/updateStudent"; // Update API endpoint
-    final input={
-      "student_id": studentId, // Replace with actual student ID
+    final input = {
+      "student_id": studentId,
       "name": nameController.text,
       "email": emailController.text,
       "phone": mobileController.text,
       "age": ageController.text,
       "address": addressController.text,
     };
-    print(input);
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "student_id": studentId, // Replace with actual student ID
-        "name": nameController.text,
-        "email": emailController.text,
-        "phone": mobileController.text,
-        "age": ageController.text,
-        "address": addressController.text,
-      }),
-    );
 
-    final data = json.decode(response.body);
-    print(data);
+    try {
+      final response = await ApiService.post("updateStudent", input, token: token);
 
-    if (response.statusCode == 200 && data['status'] == true) {
-      setState(() {
-        _isEdited = false;
-      });
+      if (response != null && response['status'] == true) {
+        setState(() {
+          _isEdited = false;
+        });
 
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Profile Updated Successfully!")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response?['message'] ?? "Failed to update profile")),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Profile Updated Successfully!")),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data['message'] ?? "Failed to update profile")),
+        SnackBar(content: Text("Error updating profile")),
       );
     }
 
@@ -139,6 +122,7 @@ print(data);
       _isSaving = false;
     });
   }
+
 
 
   @override

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,23 +26,20 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
   }
 
   Future<void> fetchPrescriptionDetails() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
 
-    final response = await http.post(
-      Uri.parse("http://127.0.0.1:8000/api/getPatientDeatils"),
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json"
-      },
-      body: jsonEncode({"appointmentId": widget.appointmentId}),
+    final response = await ApiService.post(
+      "getPatientDeatils",
+      {"appointmentId": widget.appointmentId},
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+    if (response != null) {
       setState(() {
-        appointment = data['appointment'];
-        medicines = data['medicines'] ?? [];
+        appointment = response['appointment'];
+        medicines = response['medicines'] ?? [];
         isLoading = false;
       });
     } else {

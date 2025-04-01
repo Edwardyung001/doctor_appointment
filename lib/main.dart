@@ -1,9 +1,5 @@
 import 'package:doctor/patients/PatientsDashboardScreen.dart';
-import 'package:doctor/student/disease_enter_screen.dart';
-import 'package:doctor/student/disease_view_screen.dart' show DiseaseEntryScreen, DiseaseTableScreen;
 import 'package:doctor/student/student_dashboard_screen.dart';
-import 'package:doctor/student/student_signup.dart';
-import 'package:doctor/student/student_update_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'doctor/dashboard_screen.dart';

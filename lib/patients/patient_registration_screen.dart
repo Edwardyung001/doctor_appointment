@@ -1,4 +1,5 @@
 import 'package:doctor/login_screen.dart';
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -118,38 +119,36 @@ class _PatientRegistrationScreenState extends State<PatientRegistrationScreen> {
     );
   }
 
-
-
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/addPatient"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "name": name,
-          "email": email,
-          "password": password,
-          "phone_number": contact,
-          "address": address ?? "",
-          "gender": gender ?? "",
-          "age": age ?? "",
-        }),
-      );
-print(response.body);
-      if (response.statusCode == 200|| response.statusCode == 201) {
+      final newPatient = {
+        "name": name,
+        "email": email,
+        "password": password,
+        "phone_number": contact,
+        "address": address ?? "",
+        "gender": gender ?? "",
+        "age": age ?? "",
+      };
+
+      final response = await ApiService.post("addPatient", newPatient);
+
+      print(response);
+
+      if (response != null) {
         Future.delayed(Duration(seconds: 1), () {
           Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
         });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Patient added successfully!")),
         );
-
-
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${response.body}")),
+          SnackBar(content: Text("Failed to add patient.")),
         );
       }
     }
   }
+
 }

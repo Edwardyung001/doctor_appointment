@@ -1,3 +1,4 @@
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -15,12 +16,11 @@ class _DoctorRegistrationScreenState extends State<DoctorRegistrationScreen> {
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final url = Uri.parse("http://127.0.0.1:8000/api/addDoctor");
+
       try {
-        final response = await http.post(
-          url,
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode({
+        final response = await ApiService.post(
+          "addDoctor",
+          {
             "name": name,
             "email": email,
             "password": password,
@@ -28,32 +28,31 @@ class _DoctorRegistrationScreenState extends State<DoctorRegistrationScreen> {
             "address": address,
             "specialist": specialization,
             "experience": experience,
-          }),
+          },
         );
-        final responseData = jsonDecode(response.body);
-        print(responseData);
-        if (response.statusCode == 200 || response.statusCode == 201) {
+
+        if (response != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(responseData["message"] ?? "Doctor added successfully!")),
+            SnackBar(content: Text(response["message"] ?? "Doctor added successfully!")),
           );
 
           Future.delayed(Duration(seconds: 1), () {
-            Navigator.pop(context); // Ensure route is defined in MaterialApp
+            Navigator.pop(context);
           });
         } else {
-          // Show specific error message from API response
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(responseData["error"] ?? "Failed to register. Please try again!")),
+            SnackBar(content: Text("Failed to register. Please try again!")),
           );
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e")),
         );
-        print(e);
+        print("Exception: $e");
       }
     }
   }
+
 
 
 

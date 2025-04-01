@@ -1,9 +1,9 @@
 import 'dart:convert';
+import 'package:doctor/network/api_serivce.dart';
 import 'package:doctor/password_textfiled_widget.dart';
 import 'package:doctor/patients/PatientsDashboardScreen.dart';
 import 'package:doctor/student/student_dashboard_screen.dart';
 import 'package:doctor/student/student_signup.dart';
-import 'package:doctor/student/student_update_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,42 +25,30 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> login(BuildContext context) async {
     if (!_formKey.currentState!.validate() || selectedRole == null) return;
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
-    final url = Uri.parse("http://127.0.0.1:8000/api/login");
+    // API request payload
+    final requestBody = {
+      "email": username,
+      "password": password,
+      "role": selectedRole!.toLowerCase(),
+    };
 
-    final input={   "email": username,
-    "password": password,
-    "role": selectedRole!.toLowerCase(),};
-    print(input);
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "email": username,
-        "password": password,
-        "role": selectedRole!.toLowerCase(), // Send role as 'doctor' or 'patient'
-      }),
-    );
+    print("Sending request: $requestBody");
 
-    setState(() {
-      isLoading = false;
-    });
+    // Use common API service
+    final response = await ApiService.post("login", requestBody);
 
-    if (response.statusCode == 200||response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-      print(data);
+    setState(() => isLoading = false);
 
-      // Save token in SharedPreferences
+    if (response != null) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', data['token']);
+      await prefs.setString('token', response['token']);
       await prefs.setString('role', selectedRole!);
-      await prefs.setString('docId', data['userId'].toString());
+      await prefs.setString('docId', response['userId'].toString());
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("${data['message']}")),
+        SnackBar(content: Text("${response['message']}")),
       );
 
       // Navigate to the respective dashboard
@@ -74,8 +62,7 @@ class _LoginPageState extends State<LoginPage> {
           context,
           MaterialPageRoute(builder: (context) => PatientsDashboardScreen()),
         );
-      }
-      else if (selectedRole!.toLowerCase() == "student") {
+      } else if (selectedRole!.toLowerCase() == "student") {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => StudentDashboard()),
@@ -87,7 +74,6 @@ class _LoginPageState extends State<LoginPage> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {

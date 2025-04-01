@@ -1,3 +1,4 @@
+import 'package:doctor/network/api_serivce.dart';
 import 'package:doctor/patients/PatientsDashboardScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -26,27 +27,19 @@ class _AppointmentFormScreenState extends State<AppointmentFormScreen> {
   }
 
   Future<void> fetchDoctors() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-
-    final response = await http.get(
-      Uri.parse("http://127.0.0.1:8000/api/doctors"),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+    final response = await ApiService.get("doctors");
+    if (response != null) {
       setState(() {
-        doctors = List<Map<String, dynamic>>.from(data['doctors']);
+        doctors = List<Map<String, dynamic>>.from(response['doctors']);
       });
     } else {
-      print("Failed to fetch doctors: ${response.body}");
+      print("Failed to fetch doctors.");
     }
   }
 
+
   Future<void> createAppointment() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
     String? patientId = prefs.getString('docId');
 
     if (selectedDoctorId == null ||
@@ -61,26 +54,17 @@ class _AppointmentFormScreenState extends State<AppointmentFormScreen> {
       return;
     }
 
-    final response = await http.post(
-      Uri.parse("http://127.0.0.1:8000/api/createAppointment"),
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json"
-      },
-      body: jsonEncode({
-        "patientId": patientId, // Replace with logged-in patient ID
-        "doctorId": selectedDoctorId,
-        "appointTime": timeController.text,
-        "appointDate": dateController.text,
-        "problem": problemController.text,
-      }),
-    );
+    final response = await ApiService.post("createAppointment", {
+      "patientId": patientId,
+      "doctorId": selectedDoctorId,
+      "appointTime": timeController.text,
+      "appointDate": dateController.text,
+      "problem": problemController.text,
+    });
 
-    final data = jsonDecode(response.body);
-print(data);
-    if (response.statusCode == 200) {
+    if (response != null && response["message"] == "Appoint Created Successfully") {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(data["message"]),
+        content: Text(response["message"]),
         backgroundColor: Colors.green,
       ));
       Future.delayed(Duration(seconds: 1), () {
@@ -91,11 +75,12 @@ print(data);
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(data["message"]),
+        content: Text(response?["message"] ?? "Failed to create appointment."),
         backgroundColor: Colors.red,
       ));
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

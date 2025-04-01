@@ -1,3 +1,4 @@
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -33,43 +34,33 @@ class _StudentSignupScreenState extends State<StudentSignupScreen> {
       _isLoading = true;
     });
 
-    final url = Uri.parse("http://127.0.0.1:8000/api/addStudent");
+    final input = {
+      "name": _nameController.text,
+      "email": _emailController.text,
+      "password": _passwordController.text,
+      "phone_number": _mobileController.text,
+      "gender": _selectedGender,
+      "address": _addressController.text.isEmpty ? null : _addressController.text,
+      "age": _ageController.text,
+    };
 
     try {
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "name": _nameController.text,
-          "email": _emailController.text,
-          "password": _passwordController.text,
-          "phone_number": _mobileController.text,
-          "gender": _selectedGender,
-          "address": _addressController.text.isEmpty ? null : _addressController.text,
-          "age": _ageController.text,
-        }),
-      );
-
-      print("Response: ${response.body}");
+      final response = await ApiService.post("addStudent", input);
 
       setState(() {
         _isLoading = false;
       });
 
-      if (response.statusCode == 200||response.statusCode==201) {
-        final data = jsonDecode(response.body);
-
+      if (response != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["message"])),
+          SnackBar(content: Text(response["message"] ?? "Signup successful!")),
         );
 
-        if (data["message"] == "Student added successfully!") {
-          if (mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => LoginPage()),
-            );
-          }
+        if (response["message"] == "Student added successfully!" && mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -86,6 +77,7 @@ class _StudentSignupScreenState extends State<StudentSignupScreen> {
       );
     }
   }
+
 
 
   @override

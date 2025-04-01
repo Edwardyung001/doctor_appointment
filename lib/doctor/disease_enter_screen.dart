@@ -1,6 +1,5 @@
-import 'dart:convert';
+import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DiseaseManagementPage extends StatefulWidget {
@@ -17,47 +16,60 @@ class _DiseaseManagementPageState extends State<DiseaseManagementPage> {
   String notes = '';
   String day = '';
   List<dynamic> diseases = [];
-
-  String apiUrl = "http://127.0.0.1:8000/api/diseases";
+   bool _isLoading=false;
 
   Future<void> addDisease() async {
     if (!_formKey.currentState!.validate()) return;
 
     _formKey.currentState!.save();
+
     final newDisease = {
       "name": diseaseName,
       "symptoms": symptoms,
       "treatment": treatment,
       "cases": cases,
       "notes": notes,
-      "day": day,
     };
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-    try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(newDisease),
-      );
+print(token);
+    setState(() {
+      _isLoading = true;
+    });
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+    try {
+      final response = await ApiService.post("diseases", newDisease, token: token);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (response != null && response["status"] == true) {
         setState(() {
-          diseases.add(responseData['disease']);
+          diseases.add(response['disease']);
         });
         _formKey.currentState!.reset();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Disease added successfully!")));
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response["message"] ?? "Disease added successfully!")),
+        );
       } else {
-        print("Failed to add disease: ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response?["message"] ?? "Failed to add disease.")),
+        );
       }
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       print("Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("An error occurred. Please try again.")),
+      );
     }
   }
+
 
   // Delete a disease (optional)
   void _deleteDisease(int index) {
@@ -94,20 +106,16 @@ class _DiseaseManagementPageState extends State<DiseaseManagementPage> {
                     onSaved: (value) => treatment = value!,
                   ),
                   TextFormField(
-                    decoration: InputDecoration(labelText: 'Cases'),
+                    decoration: InputDecoration(labelText: 'Causes'),
                     keyboardType: TextInputType.number,
                     validator: (value) => value!.isEmpty ? 'Enter number of cases' : null,
                     onSaved: (value) => cases = value!,
                   ),
                   TextFormField(
-                    decoration: InputDecoration(labelText: 'Notes'),
+                    decoration: InputDecoration(labelText: 'overview'),
                     onSaved: (value) => notes = value!,
                   ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Day'),
-                    validator: (value) => value!.isEmpty ? 'Enter day' : null,
-                    onSaved: (value) => day = value!,
-                  ),
+
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: addDisease,
@@ -124,9 +132,9 @@ class _DiseaseManagementPageState extends State<DiseaseManagementPage> {
                   final disease = diseases[index];
                   return Card(
                     child: ListTile(
-                      title: Text(disease['name']),
+                      title: Text(disease['disease_name']),
                       subtitle: Text(
-                          'Symptoms: ${disease['symptoms']}\nTreatment: ${disease['treatment']}\nCases: ${disease['cases']}\nNotes: ${disease['notes']}\nDay: ${disease['day']}'),
+                          'Symptoms: ${disease['symptoms']}\nTreatment: ${disease['treatment']}\nCases: ${disease['causes']}\nNotes: ${disease['overview']}'),
                       trailing: IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         onPressed: () => _deleteDisease(index),

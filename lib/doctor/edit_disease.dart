@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../network/api_serivce.dart';
 import 'disease_view_screen.dart';
 
 class EditDiseaseScreen extends StatefulWidget {
@@ -44,37 +45,28 @@ class _EditDiseaseScreenState extends State<EditDiseaseScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
-    final String apiUrl = "http://127.0.0.1:8000/api/getDiseaseById";
-
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-      body: jsonEncode({
-        "id": widget.diseaseId,
-      }),
+    final response = await ApiService.post("getDiseaseById",
+        {"id": widget.diseaseId},
+        token: token
     );
 
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 200 && data["status"] == true) {
+    if (response != null && response["status"] == true) {
       setState(() {
-        nameController.text = data["disease"]["name"];
-        symptomsController.text = data["disease"]["symptoms"];
-        treatmentController.text = data["disease"]["treatment"];
-        casesController.text = data["disease"]["cases"].toString();
-        notesController.text = data["disease"]["notes"];
-        dayController.text = data["disease"]["day"].toString();
+        nameController.text = response["disease"]["disease_name"];
+        symptomsController.text = response["disease"]["symptoms"];
+        treatmentController.text = response["disease"]["treatment"];
+        casesController.text = response["disease"]["causes"].toString();
+        notesController.text = response["disease"]["overview"];
         _isLoading = false;
       });
     } else {
       setState(() {
-        _errorMessage = data["message"] ?? "Failed to fetch disease details";
+        _errorMessage = response?["message"] ?? "Failed to fetch disease details";
         _isLoading = false;
       });
     }
   }
+
 
   // Update disease details
   Future<void> _saveChanges() async {
@@ -86,43 +78,29 @@ class _EditDiseaseScreenState extends State<EditDiseaseScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
-    final String apiUrl = "http://127.0.0.1:8000/api/updateDiseases";
-final input={
-  "disease_id": widget.diseaseId, // Required ID
-  "name": nameController.text,
-  "symptoms": symptomsController.text,
-  "treatment": treatmentController.text,
-  "cases": casesController.text,
-  "notes": notesController.text,
-  "day": dayController.text,
-};
-print(input);
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-      body: jsonEncode({
-        "id": widget.diseaseId, // Required ID
-        "name": nameController.text,
-        "symptoms": symptomsController.text,
-        "treatment": treatmentController.text,
-        "cases": casesController.text,
-        "notes": notesController.text,
-        "day": dayController.text,
-      }),
-    );
+    final input = {
+      "id": widget.diseaseId, // Required ID
+      "name": nameController.text,
+      "symptoms": symptomsController.text,
+      "treatment": treatmentController.text,
+      "cases": casesController.text,
+      "notes": notesController.text,
+    };
 
-    final data = jsonDecode(response.body);
-    print(data);
-    if (response.statusCode == 200 && data["status"] == true) {
-      Navigator.push(context, MaterialPageRoute(builder: (context)=>DiseaseTableScreen()));
+    print(input);
 
-      // Return updated data
+    final response = await ApiService.post("updateDiseases", input, token: token);
+
+    print(response);
+
+    if (response != null && response["status"] == true) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => DiseaseTableScreen()),
+      );
     } else {
       setState(() {
-        _errorMessage = data["message"] ?? "Failed to update disease";
+        _errorMessage = response?["message"] ?? "Failed to update disease";
       });
     }
 
@@ -130,6 +108,7 @@ print(input);
       _isSaving = false;
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +125,6 @@ print(input);
             TextField(controller: treatmentController, decoration: InputDecoration(labelText: "Treatment")),
             TextField(controller: casesController, decoration: InputDecoration(labelText: "Cases"), keyboardType: TextInputType.number),
             TextField(controller: notesController, decoration: InputDecoration(labelText: "Notes")),
-            TextField(controller: dayController, decoration: InputDecoration(labelText: "Day"), keyboardType: TextInputType.number),
             if (_errorMessage.isNotEmpty) // Show error message if any
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),

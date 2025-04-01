@@ -1,10 +1,9 @@
 import 'package:doctor/login_screen.dart';
+import 'package:doctor/doctor/disease_enter_screen.dart';
 import 'package:doctor/student/student_update_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'disease_enter_screen.dart';
-import 'disease_view_screen.dart';
+import '../doctor/disease_view_screen.dart';
 
 
 class StudentDashboard extends StatelessWidget {
