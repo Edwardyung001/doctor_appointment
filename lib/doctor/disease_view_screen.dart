@@ -109,8 +109,8 @@ class _DiseaseTableScreenState extends State<DiseaseTableScreen> {
                       DataColumn(label: Text("Disease Name", style: TextStyle(fontWeight: FontWeight.bold))),
                       DataColumn(label: Text("Symptoms", style: TextStyle(fontWeight: FontWeight.bold))),
                       DataColumn(label: Text("Treatment", style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text("Cases", style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text("Notes", style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text("causes", style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text("overview", style: TextStyle(fontWeight: FontWeight.bold))),
                       DataColumn(label: Text("Actions", style: TextStyle(fontWeight: FontWeight.bold))),
                     ],
                     rows: _filteredDiseaseList.asMap().entries.map((entry) {

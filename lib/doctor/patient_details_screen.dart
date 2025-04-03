@@ -15,7 +15,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   Map<String, dynamic>? appointment;
   bool isLoading = true;
   String errorMessage = "";
-  TextEditingController notesController = TextEditingController();
+  TextEditingController symptomsController = TextEditingController();
   List<dynamic> diseases = [];
 
   @override
@@ -54,7 +54,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     try {
       final response = await ApiService.post(
         "diseases/search",
-        {"symptoms": notesController.text},
+        {"symptoms": symptomsController.text},
       );
 
       if (response != null && response.containsKey("diseases")) {
@@ -118,7 +118,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
               // TextField for entering symptoms
               SizedBox(height: 20),
               TextField(
-                controller: notesController,
+                controller: symptomsController,
                 decoration: InputDecoration(
                   labelText: "Enter Symptoms",
                   border: OutlineInputBorder(),
@@ -136,15 +136,14 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                 Text("Diseases Found:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ...diseases.map((disease) => Card(
                   child: ListTile(
-                    title: Text(disease["name"], style: TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(disease["disease_name"], style: TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text("Symptoms: ${disease["symptoms"]}"),
                         Text("Treatment: ${disease["treatment"]}"),
-                        Text("Cases: ${disease["cases"]}"),
-                        Text("Notes: ${disease["notes"]}"),
-                        Text("Days: ${disease["day"]}"),
+                        Text("causes: ${disease["causes"]}"),
+                        Text("overview: ${disease["overview"]}"),
                       ],
                     ),
                   ),

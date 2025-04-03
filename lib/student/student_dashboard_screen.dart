@@ -1,11 +1,11 @@
 import 'package:doctor/login_screen.dart';
-import 'package:doctor/doctor/disease_enter_screen.dart';
 import 'package:doctor/network/api_serivce.dart';
+import 'package:doctor/student/StudentNotesScreen.dart';
 import 'package:doctor/student/student_disease_view.dart';
 import 'package:doctor/student/student_update_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../doctor/disease_view_screen.dart';
+
 
 class StudentDashboard extends StatefulWidget {
   @override
@@ -143,12 +143,22 @@ class _StudentDashboardState extends State<StudentDashboard> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.description, color: Colors.deepPurple),
-            title: Text("View Disease", style: TextStyle(color: Colors.deepPurple)),
+            leading: Icon(Icons.search, color: Colors.deepPurple),
+            title: Text("Search Diseases", style: TextStyle(color: Colors.deepPurple)),
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => StudentDiseaseScreen()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.note_alt, color: Colors.deepPurple),
+            title: Text("Notes", style: TextStyle(color: Colors.deepPurple)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => StudentNotesScreen()),
               );
             },
           ),

@@ -11,6 +11,7 @@ class ApiService {
     final url = Uri.parse("$baseUrl$endpoint");
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
+    print(token);
     try {
 
       final response = await http.post(

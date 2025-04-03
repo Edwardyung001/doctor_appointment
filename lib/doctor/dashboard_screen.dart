@@ -1,3 +1,5 @@
+import 'package:doctor/doctor/add_in_patient_screen.dart';
+import 'package:doctor/doctor/in_patient_screen.dart';
 import 'package:doctor/doctor/patient_history.dart';
 import 'package:doctor/login_screen.dart';
 import 'package:doctor/doctor/pending_appointments_screen.dart';
@@ -122,7 +124,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                 MaterialPageRoute(builder: (context) => EditProfileScreen()),
               );
             },
-          ),ListTile(
+          ),
+          ListTile(
             leading: Icon(Icons.description, color: Colors.deepPurple),
             title: Text("Add Disease", style: TextStyle(color: Colors.deepPurple)),
             onTap: () {
@@ -143,16 +146,26 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               );
             },
           ),
-          // ListTile(
-          //   leading: Icon(Icons.medical_services, color: Colors.deepPurple),
-          //   title: Text("Diagnosis", style: TextStyle(color: Colors.deepPurple)),
-          //   onTap: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(builder: (context) => EditProfileScreen()),
-          //     );
-          //   },
-          // ),
+          ListTile(
+            leading: Icon(Icons.medical_services, color: Colors.deepPurple),
+            title: Text("Add In Patient", style: TextStyle(color: Colors.deepPurple)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddPatientScreen()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.medical_services, color: Colors.deepPurple),
+            title: Text("In Patient List", style: TextStyle(color: Colors.deepPurple)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => InPatientListScreen()),
+              );
+            },
+          ),
           ListTile(
             leading: Icon(Icons.history, color: Colors.deepPurple),
             title: Text("Appointment List", style: TextStyle(color: Colors.deepPurple)),

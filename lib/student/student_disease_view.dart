@@ -1,6 +1,7 @@
 import 'package:doctor/network/api_serivce.dart';
 import 'package:flutter/material.dart';
 
+import 'student_disease_details_screen.dart';
 
 class StudentDiseaseScreen extends StatefulWidget {
   @override
@@ -48,11 +49,18 @@ class _StudentDiseaseScreenState extends State<StudentDiseaseScreen> {
     setState(() {
       _filteredDiseaseList = diseaseList
           .where((disease) =>
-      (disease["disease_name"]?.toLowerCase() ?? "").contains(query) ||
-          (disease["symptoms"]?.toLowerCase() ?? "").contains(query) ||
-          (disease["treatment"]?.toLowerCase() ?? "").contains(query))
+          (disease["disease_name"]?.toLowerCase() ?? "").contains(query))
           .toList();
     });
+  }
+
+  void _navigateToDiseaseDetail(Map<String, dynamic> disease) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DiseaseDetailScreen(disease: disease),
+      ),
+    );
   }
 
   @override
@@ -80,32 +88,28 @@ class _StudentDiseaseScreenState extends State<StudentDiseaseScreen> {
                   ? Center(child: Text(_errorMessage, style: TextStyle(color: Colors.red, fontSize: 16)))
                   : SingleChildScrollView(
                 scrollDirection: Axis.vertical,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columns: [
-                      DataColumn(label: Text("Sl. No", style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text("Disease Name", style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text("Symptoms", style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text("Treatment", style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text("Cases", style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text("Notes", style: TextStyle(fontWeight: FontWeight.bold))),
+                child: DataTable(
+                  columns: [
+                    DataColumn(label: Text("Sl.No", style: TextStyle(fontWeight: FontWeight.bold))),
+                    DataColumn(label: Text("Disease Name", style: TextStyle(fontWeight: FontWeight.bold))),
+                  ],
+                  rows: _filteredDiseaseList.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    Map<String, dynamic> data = entry.value;
 
-                    ],
-                    rows: _filteredDiseaseList.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      Map<String, dynamic> data = entry.value;
-
-                      return DataRow(cells: [
-                        DataCell(Text("${index + 1}")),
-                        DataCell(Text(data["disease_name"] ?? "N/A")),
-                        DataCell(Text(data["symptoms"] ?? "N/A")),
-                        DataCell(Text(data["treatment"] ?? "N/A")),
-                        DataCell(Text("${data["causes"] ?? "N/A"}")),
-                        DataCell(Text(data["overview"] ?? "N/A")),
-                      ]);
-                    }).toList(),
-                  ),
+                    return DataRow(cells: [
+                      DataCell(Text("${index + 1}")),
+                      DataCell(
+                        GestureDetector(
+                          onTap: () => _navigateToDiseaseDetail(data), // Click to navigate
+                          child: Text(
+                            data["disease_name"] ?? "N/A",
+                            style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                          ),
+                        ),
+                      ),
+                    ]);
+                  }).toList(),
                 ),
               ),
             ),
